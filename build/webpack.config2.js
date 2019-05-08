@@ -1,63 +1,54 @@
-// build/webpack.config.js
 const path = require('path')
-const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const webpack = require('webpack')
 const VueLoaderPlugin = require('vue-loader/lib/plugin')
+
 module.exports = {
+  mode: 'development',
   entry: {
-    // 配置入口文件
-    main: path.resolve(__dirname, '../src/main.js')
+    main: ["@babel/polyfill", path.resolve(__dirname, '../src/main.js')]
   },
   output: {
-    // 配置打包文件输出的目录
     path: path.resolve(__dirname, '../dist'),
-    // 生成的 js 文件名称
     filename: 'js/[name].[hash:8].js',
-    // 生成的 chunk 名称
     chunkFilename: 'js/[name].[hash:8].js',
-    // 资源引用的路径
     publicPath: './'
   },
   devServer: {
     hot: true,
-    port: 3000,
+    port: 8080,
     contentBase: './dist'
   },
   resolve: {
     alias: {
       vue$: 'vue/dist/vue.runtime.esm.js'
-    },
-    extensions: [
-      '.js',
-      '.vue'
-    ]
+    }
   },
   module: {
     rules: [
       {
-        test: /\.vue$/,
+        test: /\.(js|jsx)?$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader'
+        }
+      },
+      {
+        test: /\.(scss|sass)$/,
         use: [
-          {
-            loader: 'cache-loader'
-          },
-          {
-            loader: 'vue-loader',
+          { loader: 'style-loader' },
+          { loader: 'css-loader' },
+          { 
+            loader: 'sass-loader',
             options: {
-              compilerOptions: {
-                preserveWhitespace: false
-              },
+              implementation: require('dart-sass')
             }
-          }
+          },
+          { loader: 'postcss-loader' }
         ]
       },
       {
-        test: /\.(js|jsx)?$/,
-        exclude: /node_modules/,
-        loader: 'babel-loader'
-      },
-
-      {
-        test: /\.(jpe?g|png|gif)$/,
+        test: /\.(jpe?g|png|gif)$/i,
         use: [
           {
             loader: 'url-loader',
@@ -66,7 +57,7 @@ module.exports = {
               fallback: {
                 loader: 'file-loader',
                 options: {
-                  name: 'img/[name].[hash:8].[ext]'
+                    name: 'img/[name].[hash:8].[ext]'
                 }
               }
             }
@@ -107,15 +98,42 @@ module.exports = {
           }
         ]
       },
+      {
+        test: /\.vue$/,
+        use: [
+          { loader: 'cache-loader' },
+          { loader: 'thread-loader' },
+          {
+            loader: 'vue-loader',
+            options: {
+              compilerOptions: {
+                preserveWhitespace: false
+              }
+            }
+          }
+        ]
+      },
+      {
+        test: /\.jsx?$/,
+        use: [
+          { loader: 'cache-loader' },
+          { loader: 'thread-loader' },
+          { loader: 'babel-loader' }
+        ]
+      }
     ]
   },
   plugins: [
-    new VueLoaderPlugin(),
-
     new HtmlWebpackPlugin({
-      template: path.resolve(__dirname, '../src/index.html')
+      template: path.resolve(__dirname, '../public/index.html')
     }),
-    new webpack.NamedModulesPlugin(),
+    new webpack.NamedChunksPlugin(),
     new webpack.HotModuleReplacementPlugin(),
+    new VueLoaderPlugin(),
+    new webpack.DefinePlugin({
+      'process.env': {
+        VUE_APP_BASE_URL: JSON.stringify('http://localhost:8080')
+      }
+    })
   ]
 }

@@ -1,10 +1,6 @@
-console.log('Hello World')
+import Vue from 'vue'
+import App from './App.vue'
 
-function es6Toes5 () {
-  setTimeout(() => {})
-  let arr = []
-
-  arr.forEach((a) => {
-    console.log(a)
-  })
-}
+new Vue({
+  render: h => h(App)
+}).$mount('#app')
